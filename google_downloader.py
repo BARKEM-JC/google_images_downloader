@@ -65,12 +65,12 @@ class SearchConfig():
     :param related_max - the maximum amount of related images on top of total_images, if set to 0 then it will count towards the total_images
     """
     def __init__(self,
-                 exclude_keywords: list[str]=[],
-                 specific_sites: list[str]=[],
+                 exclude_keywords: list[str] = None,
+                 specific_sites: list[str] = None,
                  safe_search: bool = False,
                  loaded_limiter: int = 50,
                  grabdownload_threads: int = 50,
-                 scraper_processes: int = 5,
+                 scraper_processes: int = 1,
                  image_limit: int = 100,
                  humans_only: bool = False,
                  humans_threshold: float = 0.8,
@@ -87,8 +87,8 @@ class SearchConfig():
                  related_max = 0,
                  continue_after_processing_if_under_limit = False,
                 ):
-        self.exclude_keywords = exclude_keywords
-        self.specific_sites = specific_sites
+        self.exclude_keywords = [] if exclude_keywords is None else exclude_keywords
+        self.specific_sites = [] if specific_sites is None else specific_sites
         self.safe_search = safe_search
         self.loaded_limiter = loaded_limiter
         self.grabdownload_threads = grabdownload_threads
@@ -189,6 +189,7 @@ class Search():
         # self.Config.continue_after_processing_if_under_limit
         print("Scraping Images")
         processes = []
+
         for i in range(self.Config.scraper_processes):
             p = multiprocessing.Process(target=WorkerProcess, daemon=True, args=(
                 self.Config,
@@ -201,20 +202,26 @@ class Search():
             ))
             processes.append(p)
             p.start()
+            time.sleep(0.5)
+        time.sleep(5)
         last_length = 0
-
+        last_time = time.time()
         while (len(self.shared_dict.keys()) -
                (self._related_image_count.value if self.Config.related_max != 0 else 0)
                < self.Config.image_limit):
             time.sleep(0.01)
             images_length = len(self.shared_dict.keys())
             if images_length > last_length:
+                last_time = time.time()
                 print(images_length)
                 last_length = images_length
             if images_length % (self.Config.image_limit / 10) == 0:
                 self._SessionItems = {key: self.shared_dict[key] for key in self.shared_dict.keys()}
                 self._save()
             if not any(processor.is_alive() for processor in processes):
+                break
+            if time.time() - last_time > 20:
+                print("Scraping timeout")
                 break
         self._SessionItems = {key: self.shared_dict[key] for key in self.shared_dict.keys()}
         self.MultiProcessingKillEvent.set()
@@ -248,9 +255,9 @@ class Search():
         DataProcessor.ValidateSessionImageDatas()
         if self.Config.remove_duplicates:
             DataProcessor.FindDuplicates()
-        if self.Config.ignore_text:
+        if self.Config.ignore_text[0]:
             DataProcessor.detect_text()
-        if self.Config.humans_only:
+        if self.Config.humans_only[0]:
             DataProcessor.detect_humans()
 
     def GrabDownloadThread(self, workload):
@@ -388,10 +395,12 @@ def WorkerProcess(Config, SearchTerm, shared_dict, shared_lastscrolly, last_thum
         driver.execute_script("window.scrollTo(0, arguments[0]);", shared_lastscrolly.value)
     except:
         return
+    #for _ in range(3):
+     #   lib.full_scroll(driver)
     # Move webdriver page to correct position
     while not exit_flag.is_set():
         try:
-            thumbnails = WebDriverWait(driver, 0.5).until(EC.visibility_of_all_elements_located((By.XPATH, f'(//a[@data-nav="1"])[position() > {last_thumbnail_index.value}]')))
+            thumbnails = WebDriverWait(driver, 2).until(EC.visibility_of_all_elements_located((By.XPATH, f'(//a[@data-nav="1"])[position() > {last_thumbnail_index.value}]')))
             with last_thumbnail_index.get_lock():
                 last_thumbnail_index = last_thumbnail_index.value + len(thumbnails)
         except TimeoutException:
@@ -422,13 +431,14 @@ def WorkerProcess(Config, SearchTerm, shared_dict, shared_lastscrolly, last_thum
                     break
             except:
                 pass
-        lib.full_scroll(driver)
+        #lib.full_scroll(driver)
         try:
             with shared_lastscrolly.get_lock():
                 shared_lastscrolly = driver.execute_script("return window.pageYOffset")
+                pass
         except:
             pass
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        #WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
     driver.quit()
 
 

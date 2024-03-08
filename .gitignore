@@ -3,3 +3,8 @@
 *.jpg
 *.pkl
 yolov3.weights
+*.iml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/inspectionProfiles/Project_Default.xml
+.idea/misc.xml
+*.xml
