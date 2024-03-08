@@ -1,0 +1,5 @@
+
+*.pyc
+*.jpg
+*.pkl
+yolov3.weights

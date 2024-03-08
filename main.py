@@ -5,7 +5,7 @@ from constants import ChromeConfig
 
 if __name__ == '__main__':
     kill_all_selenium_instances()
-    atexit.register(lambda: kill_all_selenium_instances)
+    atexit.register(kill_all_selenium_instances)
     #search = Search('eggs', SearchConfig(image_limit=100))
     #search.StartThreads()
     Search('test', SearchConfig(
