@@ -626,12 +626,3 @@ class DataPreProcessing():
                         print(e)
             if result is not None and len(result) > character_threshold:
                 self.__RemoveImageData(img)
-
-
-if __name__ == '__main__':
-    lib.kill_all_selenium_instances()
-    atexit.register(lambda: lib.kill_all_selenium_instances)
-    #search = Search('eggs', SearchConfig(image_limit=100))
-    #search.StartThreads()
-    Search('sumerian', SearchConfig(ignore_text=False, humans_only=False, image_limit=150, chrome_options=constants.ChromeConfig(False),
-                                           scraper_processes=3, related=False,)).StartThreads()

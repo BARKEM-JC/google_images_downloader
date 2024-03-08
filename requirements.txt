@@ -6,6 +6,6 @@ selenium
 bs4
 pytesseract
 imagehash
-PIL
+pillow
 requests
 psutil
