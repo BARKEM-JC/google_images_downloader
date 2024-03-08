@@ -1,0 +1,11 @@
+easyocr
+opencv-python
+opencv-contrib-python
+numpy
+selenium
+bs4
+pytesseract
+imagehash
+PIL
+requests
+psutil
