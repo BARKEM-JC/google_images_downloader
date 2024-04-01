@@ -48,4 +48,5 @@ def ChromeConfig(debug = False):
     options.add_argument('--disable-remote-fonts')
     options.add_argument('--disable-translate')
     options.add_argument('--disable-component-update')
+    options.add_argument('--daemon')
     return options
